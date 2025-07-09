@@ -1,3 +1,4 @@
+# app/settings.py
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -6,6 +7,7 @@ class Settings(BaseSettings):
     COLLECTION: str = "documents"
     OLLAMA_URL: str = "http://localhost:11434/api/generate"
     OLLAMA_MODEL: str = "gemma3"
+    LOG_LEVEL: str = "INFO"
 
     class Config:
         env_file = ".env"

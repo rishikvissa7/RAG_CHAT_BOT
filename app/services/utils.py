@@ -1,13 +1,13 @@
 from typing import List
+from sentence_transformers import SentenceTransformer
 import fitz  # PyMuPDF
-import numpy as np
+
+# Load the real model once
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text_from_pdf(content: bytes) -> str:
     doc = fitz.open(stream=content, filetype="pdf")
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+    return "\n".join(page.get_text() for page in doc)
 
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
     words = text.split()
@@ -18,6 +18,5 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]
             chunks.append(chunk)
     return chunks
 
-def embed_texts(texts: List[str]) -> List[list]:
-    # Dummy embedding: replace with your real embedding model
-    return [np.random.rand(384).tolist() for _ in texts]
+def embed_texts(texts: List[str]) -> List[List[float]]:
+    return model.encode(texts, convert_to_numpy=True).tolist()
