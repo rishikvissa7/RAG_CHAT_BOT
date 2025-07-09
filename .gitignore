@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+*.log
+*.sqlite3
+
+# Virtual environment
+venv/
+
+# Environment files
+.env
+
+# Qdrant or Ollama data (often generated at runtime)
+storage/
+snapshots/
+ollama/
+
+# VSCode settings
+.vscode/
+
+# Qdrant binary
+qdrant.exe
+
+# System files
+.DS_Store
+Thumbs.db
