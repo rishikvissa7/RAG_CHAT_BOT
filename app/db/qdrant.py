@@ -6,31 +6,32 @@ from app.logger import logger
 
 client = QdrantClient(url=settings.QDRANT_URL, port=settings.QDRANT_PORT)
 
-def init_qdrant():
-    logger.info("Initializing Qdrant collection...")
+def init_qdrant_collection(name: str):
     collections = client.get_collections().collections
-    if settings.COLLECTION not in [c.name for c in collections]:
-        logger.info("Creating new collection: %s", settings.COLLECTION)
+    if name not in [c.name for c in collections]:
         client.create_collection(
-            collection_name=settings.COLLECTION,
+            collection_name=name,
             vectors_config=VectorParams(size=384, distance="Cosine")
         )
-    else:
-        logger.info("Collection '%s' already exists", settings.COLLECTION)
 
-def upsert_documents(docs: list[tuple[str, list[float]]]):
-    logger.info("Upserting %d documents to Qdrant", len(docs))
+def upsert_documents(docs: list[tuple[str, list[float]]], collection_name: str):
     points = [PointStruct(id=i, vector=vec, payload={"text": txt}) for i, (txt, vec) in enumerate(docs)]
-    client.upsert(collection_name=settings.COLLECTION, points=points)
+    client.upsert(collection_name=collection_name, points=points)
 
-def query_similar(vec: list[float], top_k: int = 5):
-    logger.debug("Querying Qdrant for similar vectors (top_k=%d)", top_k)
-    hits = client.search(collection_name=settings.COLLECTION, query_vector=vec, limit=top_k)
-    results = [hit.payload["text"] for hit in hits]
-    logger.debug("Found %d similar documents", len(results))
-    return results
+def query_similar(vec: list[float], collection_name: str, top_k: int = 5):
+    hits = client.search(collection_name=collection_name, query_vector=vec, limit=top_k)
+    return [hit.payload["text"] for hit in hits]
 
-def clear_collection():
-    logger.warning("Clearing existing Qdrant collection: %s", settings.COLLECTION)
-    client.delete_collection(collection_name=settings.COLLECTION)
-    init_qdrant()
+def get_all_collections():
+    return [c.name for c in client.get_collections().collections]
+
+def get_top_match_collection(vec: list[float]):
+    collections = get_all_collections()
+    max_score = -1
+    best_collection = None
+    for col in collections:
+        hits = client.search(collection_name=col, query_vector=vec, limit=1)
+        if hits and hits[0].score > max_score:
+            max_score = hits[0].score
+            best_collection = col
+    return best_collection
